@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario de Lesly Vaca</title>
+</head>
+<body>
+    <div>
+        <form>
+            <label> Codigo:
+            <input type="number" id="codigo">
+            </label><br><br>
+
+            <label> Nombre:
+            <input type="text" id="nombre">
+            </label><br><br>
+
+            <label> Cantidad: 
+            <input type="number" id="cantidad">
+            </label><br><br>
+
+            <label> Precio:
+            <input type="number" id="precio">
+            </label><br><br>
+
+            <button type="button" id="btnAgr"> Agregar </button>
+            <button type="button" id="btnList"> Listar </button>
+            <button type="button" id="btnInv"> Listar al Inverso </button>
+            <button type="button" id="btnBusc"> Buscar </button>
+            <button type="button" id="btnElim"> Eliminar </button>
+            <button type="button" id="btnExtrP"> Extraer Primero </button>
+            <button type="button" id="btnExtrU"> Extraer Último </button>
+        </form>
+    </div>
+    <br>
+    <div id="detalles"> </div>
+
+    <script> 
+    class Producto {
+        constructor(codigo, nombre, cantidad, costo) {
+            this.codigo = codigo;
+            this.nombre = nombre;
+            this.cantidad = cantidad;
+            this.costo = costo;
+        }
+        infoHtml() {
+            return "<p><strong>Código:</strong> " + this.codigo + " | <strong>Nombre:</strong> " + this.nombre + " | <strong>Cantidad:</strong> " + this.cantidad + " | <strong>Costo:</strong> $" + this.costo + "</p>"; 
+        }
+    }
+
+    class Inventario {
+        constructor() {
+            this.producto = [];
+        }
+
+        buscarIndice(codigoBuscar) {
+            let inicio = 0;
+            let fin = this.producto.length - 1;
+
+            while (inicio <= fin) {
+                let mitad = Math.floor((inicio + fin) / 2);
+                
+                if (this.producto[mitad].codigo === codigoBuscar) {
+                    return mitad;
+                } else if (this.producto[mitad].codigo < codigoBuscar) {
+                    inicio = mitad + 1;
+                } else {
+                    fin = mitad - 1;
+                }
+            }
+            return -1;
+        }
+
+        buscar(codigoBuscar) {
+            let pos = this.buscarIndice(codigoBuscar);
+            if (pos !== -1) {
+                return this.producto[pos];
+            }
+            return null;
+        }
+
+        agregar(nuevoP) {
+            if (this.buscarIndice(nuevoP.codigo) !== -1) {
+                return false;
+            }
+
+            let pos = 0;
+            while (pos < this.producto.length && this.producto[pos].codigo < nuevoP.codigo) {
+                pos++;
+            }
+
+            this.producto.push(nuevoP); 
+            for (let i = this.producto.length - 1; i > pos; i--) {
+                this.producto[i] = this.producto[i - 1];
+            }
+            
+            this.producto[pos] = nuevoP;
+            return true;
+        }
+
+        eliminar(codigoElim) {
+            let posi = this.buscarIndice(codigoElim);
+
+            if (posi !== -1) {
+                for (let i = posi; i < this.producto.length - 1; i++) {
+                    this.producto[i] = this.producto[i + 1];
+                }
+                this.producto.pop();
+                return true;
+            }
+            return false;
+        }
+
+        listar() {
+            let resultado = "";
+            for (let i = 0; i < this.producto.length; i++) {
+                resultado += this.producto[i].infoHtml();
+            }
+            return resultado;
+        }
+
+        listarInverso() {
+            let resultado = "";
+            for (let i = this.producto.length - 1; i >= 0; i--) {
+                resultado += this.producto[i].infoHtml(); 
+            }
+            return resultado;
+        }
+
+        extraerPrimero() {
+            if (this.producto.length === 0) return null;
+                
+            let elPrimero = this.producto[0];
+            for (let i = 0; i < this.producto.length - 1; i++) {
+                this.producto[i] = this.producto[i + 1];
+            }
+            this.producto.pop();
+            return elPrimero;
+        }
+
+        extraerUltimo() {
+            if (this.producto.length === 0) return null;
+            let elUltimo = this.producto[this.producto.length - 1];
+            this.producto.pop();
+            return elUltimo;
+        }
+    }
+
+    let inventario = new Inventario();
+
+    let btnAgregar = document.getElementById("btnAgr");
+    btnAgregar.addEventListener("click", () => {
+        let cod = Number(document.getElementById("codigo").value);
+        let nom = document.getElementById("nombre").value;
+        let cant = Number(document.getElementById("cantidad").value);
+        let pre = Number(document.getElementById("precio").value);
+
+        let nuevoProd = new Producto(cod, nom, cant, pre);
+        let divDetalles = document.getElementById("detalles");
+
+        let seAgrego = inventario.agregar(nuevoProd);
+        
+        if(seAgrego) {
+            divDetalles.innerHTML = "<p>¡Producto agregado ordenadamente al inventario!</p>";
+        } else {
+            divDetalles.innerHTML = "<p><strong>Error:</strong> El código " + cod + " ya existe. Ingresa uno diferente.</p>";
+        }
+    });
+
+    let btnListar = document.getElementById("btnList");
+    btnListar.addEventListener("click", () => {
+        let divDetalles = document.getElementById("detalles");
+        divDetalles.innerHTML = inventario.listar(); 
+    });
+
+    let btnListarInverso = document.getElementById("btnInv");
+    btnListarInverso.addEventListener("click", () => {
+        let divDetalles = document.getElementById("detalles");
+        divDetalles.innerHTML = inventario.listarInverso(); 
+    });
+
+    let btnBuscar = document.getElementById("btnBusc");
+    btnBuscar.addEventListener("click", () => {
+        let cod = Number(document.getElementById("codigo").value);
+        let encontrado = inventario.buscar(cod);
+        let divDetalles = document.getElementById("detalles");
+        
+        if (encontrado === null) {
+            divDetalles.innerHTML = "<p>El producto no existe en tu inventario.</p>";
+        } else {
+            divDetalles.innerHTML = encontrado.infoHtml();
+        }
+    });
+
+    let btnEliminar = document.getElementById("btnElim");
+    btnEliminar.addEventListener("click", () => {
+        let cod = Number(document.getElementById("codigo").value);
+        let seElimino = inventario.eliminar(cod);
+        let divDetalles = document.getElementById("detalles");
+        
+        if (seElimino) {
+            divDetalles.innerHTML = "<p>Se eliminó correctamente. Presiona 'Listar' para verificar.</p>";
+        } else {
+            divDetalles.innerHTML = "<p>No se pudo eliminar, el producto no existe.</p>";
+        }
+    });
+
+    let btnExtrP = document.getElementById("btnExtrP");
+    btnExtrP.addEventListener("click", () => {
+        let extraido = inventario.extraerPrimero();
+        let divDetalles = document.getElementById("detalles");
+        
+        if (extraido === null) {
+            divDetalles.innerHTML = "<p>El inventario ya está vacío.</p>";
+        } else {
+            divDetalles.innerHTML = "<p><strong>Se extrajo el primero:</strong></p>" + extraido.infoHtml();
+        }
+    });
+
+    let btnExtrU = document.getElementById("btnExtrU");
+    btnExtrU.addEventListener("click", () => {
+        let extraido = inventario.extraerUltimo();
+        let divDetalles = document.getElementById("detalles");
+        
+        if (extraido === null) {
+            divDetalles.innerHTML = "<p>El inventario ya está vacío.</p>";
+        } else {
+            divDetalles.innerHTML = "<p><strong>Se extrajo el último:</strong></p>" + extraido.infoHtml();
+        }
+    });
+    </script>
+</body>
+</html>
